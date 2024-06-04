@@ -53,7 +53,12 @@ async function run() {
         }
 
         // user related api
-        app.post('/user', async(req,res)=>{
+        app.get('/users', async(req, res)=>{
+            const result = await userCollection.find().toArray();
+            res.send(result);
+        })
+
+        app.post('/users', async(req,res)=>{
             const user = req.body;
             // if exist don't insert
             const query = { email: user.email };
