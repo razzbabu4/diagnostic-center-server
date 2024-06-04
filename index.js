@@ -27,6 +27,8 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         // await client.connect();
 
+        const userCollection = client.db('diagnosticDB').collection('users');
+
         // jwt related api
         app.post('/jwt', async (req, res) => {
             const user = req.body;
@@ -49,6 +51,20 @@ async function run() {
                 next();
             })
         }
+
+        // user related api
+        app.post('/user', async(req,res)=>{
+            const user = req.body;
+            // if exist don't insert
+            const query = { email: user.email };
+            const existingUser = await userCollection.findOne(query);
+            if (existingUser) {
+              return res.send({ message: 'user already exist', insertedId: null })
+            }
+            // inset user
+            const result = await userCollection.insertOne(user);
+            res.send(result);
+        })
 
 
         // Send a ping to confirm a successful connection
