@@ -28,6 +28,7 @@ async function run() {
         // await client.connect();
 
         const userCollection = client.db('diagnosticDB').collection('users');
+        const bannerCollection = client.db('diagnosticDB').collection('banners');
 
         // jwt related api
         app.post('/jwt', async (req, res) => {
@@ -121,6 +122,13 @@ async function run() {
             }
             const result = await userCollection.updateOne(filter, updatedDoc);
             res.send(result)
+        })
+
+        // banner related api
+        app.post('/banners', async (req, res) => {
+            const banner = req.body;
+            const result = await bannerCollection.insertOne(banner);
+            res.send(result);
         })
 
 
