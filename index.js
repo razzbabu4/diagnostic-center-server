@@ -126,15 +126,47 @@ async function run() {
         });
 
         // test/service related api
-        app.get('/tests', async(req, res)=>{
+        app.get('/tests', async (req, res) => {
             const result = await testCollection.find().toArray();
             res.send(result);
         })
-        
+
+        app.get('/tests/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await testCollection.findOne(query);
+            res.send(result);
+        })
+
         app.post('/tests', verifyToken, verifyAdmin, async (req, res) => {
             const test = req.body;
             const result = await testCollection.insertOne(test);
             res.send(result);
+        })
+
+        app.put('/tests/:id', verifyToken, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const test = req.body;
+            const filter = { _id: new ObjectId(id) };
+            const updatedDoc = {
+                $set: {
+                    name: test.name,
+                    image: test.image,
+                    price: test.price,
+                    date: test.date,
+                    details: test.details,
+                    slots: test.slots
+                }
+            }
+            const result = await testCollection.updateOne(filter, updatedDoc);
+            res.send(result)
+        })
+
+        app.delete('/tests/:id', verifyToken, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await testCollection.deleteOne(query);
+            res.send(result)
         })
 
         // banner related api
@@ -160,8 +192,8 @@ async function run() {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) };
             const updatedDocAll = {
-                $set: { 
-                    isActive: 'false' 
+                $set: {
+                    isActive: 'false'
                 }
             }
             await bannerCollection.updateMany({}, updatedDocAll);
