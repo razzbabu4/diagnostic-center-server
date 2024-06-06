@@ -29,6 +29,7 @@ async function run() {
 
         const userCollection = client.db('diagnosticDB').collection('users');
         const bannerCollection = client.db('diagnosticDB').collection('banners');
+        const testCollection = client.db('diagnosticDB').collection('tests');
 
         // jwt related api
         app.post('/jwt', async (req, res) => {
@@ -122,6 +123,18 @@ async function run() {
             }
             const result = await userCollection.updateOne(filter, updatedDoc);
             res.send(result)
+        });
+
+        // test/service related api
+        app.get('/tests', async(req, res)=>{
+            const result = await testCollection.find().toArray();
+            res.send(result);
+        })
+        
+        app.post('/tests', verifyToken, verifyAdmin, async (req, res) => {
+            const test = req.body;
+            const result = await testCollection.insertOne(test);
+            res.send(result);
         })
 
         // banner related api
@@ -147,7 +160,9 @@ async function run() {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) };
             const updatedDocAll = {
-                $set: { isActive: 'false' }
+                $set: { 
+                    isActive: 'false' 
+                }
             }
             await bannerCollection.updateMany({}, updatedDocAll);
             const updatedDoc = {
@@ -159,7 +174,7 @@ async function run() {
             res.send(result)
         })
 
-        app.delete('/banners/:id', async (req, res) => {
+        app.delete('/banners/:id', verifyToken, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await bannerCollection.deleteOne(query);
