@@ -125,10 +125,31 @@ async function run() {
         })
 
         // banner related api
-        app.post('/banners', async (req, res) => {
+        app.get('/banners', verifyToken, verifyAdmin, async (req, res) => {
+            const result = await bannerCollection.find().toArray();
+            res.send(result)
+        })
+
+        app.post('/banners', verifyToken, verifyAdmin, async (req, res) => {
             const banner = req.body;
             const result = await bannerCollection.insertOne(banner);
             res.send(result);
+        })
+
+        app.patch('/banners/active/:id', verifyToken, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const updatedDocAll = {
+                 $set: { isActive: 'false' }
+            }
+            await bannerCollection.updateMany({}, updatedDocAll);
+            const updatedDoc = {
+                $set: {
+                    isActive: 'true'
+                }
+            }
+            const result = await bannerCollection.updateOne(filter, updatedDoc);
+            res.send(result)
         })
 
 
