@@ -125,8 +125,15 @@ async function run() {
         })
 
         // banner related api
-        app.get('/banners', verifyToken, verifyAdmin, async (req, res) => {
+        app.get('/banners', async (req, res) => {
             const result = await bannerCollection.find().toArray();
+            res.send(result)
+        })
+
+        app.get('/banners/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await bannerCollection.findOne(query);
             res.send(result)
         })
 
@@ -140,7 +147,7 @@ async function run() {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) };
             const updatedDocAll = {
-                 $set: { isActive: 'false' }
+                $set: { isActive: 'false' }
             }
             await bannerCollection.updateMany({}, updatedDocAll);
             const updatedDoc = {
@@ -149,6 +156,13 @@ async function run() {
                 }
             }
             const result = await bannerCollection.updateOne(filter, updatedDoc);
+            res.send(result)
+        })
+
+        app.delete('/banners/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await bannerCollection.deleteOne(query);
             res.send(result)
         })
 
