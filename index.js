@@ -30,6 +30,7 @@ async function run() {
         const userCollection = client.db('diagnosticDB').collection('users');
         const bannerCollection = client.db('diagnosticDB').collection('banners');
         const testCollection = client.db('diagnosticDB').collection('tests');
+        const recommendationCollection = client.db('diagnosticDB').collection('recommendations');
 
         // jwt related api
         app.post('/jwt', async (req, res) => {
@@ -69,6 +70,29 @@ async function run() {
         // user related api
         app.get('/users', verifyToken, verifyAdmin, async (req, res) => {
             const result = await userCollection.find().toArray();
+            res.send(result);
+        })
+
+        app.get('/users/:email', verifyToken, async (req, res) => {
+            const email = req.params.email;
+            const query = {email: email}
+            const result = await userCollection.findOne(query);
+            res.send(result);
+        })
+
+        app.patch('/users/:email', verifyToken, async (req, res) => {
+            const email = req.params.email;
+            const user = req.body;
+            const filter = {email: email}
+            const updatedDoc = {
+                $set: {
+                    name: user.name,
+                    blood: user.blood,
+                    district: user.district,
+                    upazila: user.upazila
+                }
+            }
+            const result = await userCollection.updateOne(filter, updatedDoc);
             res.send(result);
         })
 
@@ -127,7 +151,7 @@ async function run() {
 
         // test/service related api
         app.get('/tests', async (req, res) => {
-            const result = await testCollection.find().toArray();
+            const result = await testCollection.find().sort({_id:-1}).toArray();
             res.send(result);
         })
 
@@ -211,6 +235,13 @@ async function run() {
             const query = { _id: new ObjectId(id) };
             const result = await bannerCollection.deleteOne(query);
             res.send(result)
+        })
+
+
+        // recommendations
+        app.get('/recommendations', async(req, res)=>{
+            const result = await recommendationCollection.find().toArray();
+            res.send(result);
         })
 
 
