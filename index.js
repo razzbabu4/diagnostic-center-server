@@ -28,9 +28,12 @@ async function run() {
         // await client.connect();
 
         const userCollection = client.db('diagnosticDB').collection('users');
+        const districtCollection = client.db('diagnosticDB').collection('district');
+        const upazilaCollection = client.db('diagnosticDB').collection('upazila');
         const bannerCollection = client.db('diagnosticDB').collection('banners');
         const testCollection = client.db('diagnosticDB').collection('tests');
         const recommendationCollection = client.db('diagnosticDB').collection('recommendations');
+
 
         // jwt related api
         app.post('/jwt', async (req, res) => {
@@ -67,6 +70,19 @@ async function run() {
             next()
         }
 
+        // district & upazila related api
+        app.get('/district', async (req, res) => {
+            const result = await districtCollection.find().toArray();
+            res.send(result);
+        })
+        
+        app.get('/upazila/:id', async(req, res)=>{
+            const id = req.params.id;
+            const query = {district_id: id};
+            const result = await upazilaCollection.find(query).toArray();
+            res.send(result)
+        })
+
         // user related api
         app.get('/users', verifyToken, verifyAdmin, async (req, res) => {
             const result = await userCollection.find().toArray();
@@ -75,7 +91,7 @@ async function run() {
 
         app.get('/users/:email', verifyToken, async (req, res) => {
             const email = req.params.email;
-            const query = {email: email}
+            const query = { email: email }
             const result = await userCollection.findOne(query);
             res.send(result);
         })
@@ -83,7 +99,7 @@ async function run() {
         app.patch('/users/:email', verifyToken, async (req, res) => {
             const email = req.params.email;
             const user = req.body;
-            const filter = {email: email}
+            const filter = { email: email }
             const updatedDoc = {
                 $set: {
                     name: user.name,
@@ -151,7 +167,7 @@ async function run() {
 
         // test/service related api
         app.get('/tests', async (req, res) => {
-            const result = await testCollection.find().sort({_id:-1}).toArray();
+            const result = await testCollection.find().sort({ _id: -1 }).toArray();
             res.send(result);
         })
 
@@ -239,7 +255,7 @@ async function run() {
 
 
         // recommendations
-        app.get('/recommendations', async(req, res)=>{
+        app.get('/recommendations', async (req, res) => {
             const result = await recommendationCollection.find().toArray();
             res.send(result);
         })
