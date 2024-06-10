@@ -274,7 +274,19 @@ async function run() {
         })
 
         // reservation related api
-        app.post('/reservation', async (req, res) => {
+        app.get('/reservation', verifyToken, verifyAdmin, async(req, res)=>{
+            const result = await reservationCollection.find().toArray();
+            res.send(result);
+        })
+
+        app.get('/reservation/:email', verifyToken, async(req, res)=>{
+            const email = req.params.email;
+            const query = {email: email};
+            const result = await reservationCollection.find(query).toArray();
+            res.send(result);
+        })
+
+        app.post('/reservation', verifyToken, async (req, res) => {
             const reservation = req.body;
             const testId = reservation.testId;
             const reservationResult = await reservationCollection.insertOne(reservation);
@@ -286,6 +298,13 @@ async function run() {
             );
 
             res.send({ reservationResult, updateResult })
+        })
+
+        app.delete('/reservation/:id', verifyToken, async(req, res)=>{
+            const id = req.params.id;
+            const query = {_id: new ObjectId(id)};
+            const result = await reservationCollection.deleteOne(query);
+            res.send(result);
         })
 
 
