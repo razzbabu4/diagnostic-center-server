@@ -1,8 +1,10 @@
 const express = require('express');
 const cors = require('cors');
+require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-require('dotenv').config();
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
+
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -32,6 +34,7 @@ async function run() {
         const upazilaCollection = client.db('diagnosticDB').collection('upazila');
         const bannerCollection = client.db('diagnosticDB').collection('banners');
         const testCollection = client.db('diagnosticDB').collection('tests');
+        const reservationCollection = client.db('diagnosticDB').collection('reservations');
         const recommendationCollection = client.db('diagnosticDB').collection('recommendations');
 
 
@@ -75,10 +78,10 @@ async function run() {
             const result = await districtCollection.find().toArray();
             res.send(result);
         })
-        
-        app.get('/upazila/:id', async(req, res)=>{
+
+        app.get('/upazila/:id', async (req, res) => {
             const id = req.params.id;
-            const query = {district_id: id};
+            const query = { district_id: id };
             const result = await upazilaCollection.find(query).toArray();
             res.send(result)
         })
@@ -251,6 +254,38 @@ async function run() {
             const query = { _id: new ObjectId(id) };
             const result = await bannerCollection.deleteOne(query);
             res.send(result)
+        })
+
+        // payment intent
+        app.post("/create-payment-intent", verifyToken, async (req, res) => {
+            const { price } = req.body;
+            // price in cent
+            const amount = parseInt(price * 100);
+            console.log(amount, 'amount inside the intent')
+
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: 'usd',
+                payment_method_types: ["card"],
+            })
+            res.send({
+                clientSecret: paymentIntent.client_secret,
+            })
+        })
+
+        // reservation related api
+        app.post('/reservation', async (req, res) => {
+            const reservation = req.body;
+            const testId = reservation.testId;
+            const reservationResult = await reservationCollection.insertOne(reservation);
+            console.log('reservation info', reservation);
+            
+            const query = { _id: new ObjectId(testId) }
+            const updateResult = await testCollection.updateOne(
+                query, { $inc: { slots: -1 } }
+            );
+
+            res.send({ reservationResult, updateResult })
         })
 
 
