@@ -170,8 +170,17 @@ async function run() {
 
         // test/service related api
         app.get('/tests', async (req, res) => {
-            const result = await testCollection.find().sort({ _id: -1 }).toArray();
+            const result = await testCollection.find().sort({_id: -1}).toArray();
             res.send(result);
+        })
+
+        // search test by testDate
+        app.get('/searchTestDate/:testDate', async (req, res) => {
+            const {testDate} = req.params;
+            const filter = { date: { $regex: `^${testDate}$`, $options: 'i' } };
+            const result = await testCollection.find(filter).toArray();
+            res.send(result)
+            // console.log('date result:', result)
         })
 
         app.get('/tests/:id', async (req, res) => {
@@ -274,14 +283,14 @@ async function run() {
         })
 
         // reservation related api
-        app.get('/reservation', verifyToken, verifyAdmin, async(req, res)=>{
+        app.get('/reservation', verifyToken, verifyAdmin, async (req, res) => {
             const result = await reservationCollection.find().toArray();
             res.send(result);
         })
 
-        app.get('/reservation/:email', verifyToken, async(req, res)=>{
+        app.get('/reservation/:email', verifyToken, async (req, res) => {
             const email = req.params.email;
-            const query = {email: email};
+            const query = { email: email };
             const result = await reservationCollection.find(query).toArray();
             res.send(result);
         })
@@ -291,7 +300,7 @@ async function run() {
             const testId = reservation.testId;
             const reservationResult = await reservationCollection.insertOne(reservation);
             console.log('reservation info', reservation);
-            
+
             const query = { _id: new ObjectId(testId) }
             const updateResult = await testCollection.updateOne(
                 query, { $inc: { slots: -1 } }
@@ -300,9 +309,9 @@ async function run() {
             res.send({ reservationResult, updateResult })
         })
 
-        app.delete('/reservation/:id', verifyToken, async(req, res)=>{
+        app.delete('/reservation/:id', verifyToken, async (req, res) => {
             const id = req.params.id;
-            const query = {_id: new ObjectId(id)};
+            const query = { _id: new ObjectId(id) };
             const result = await reservationCollection.deleteOne(query);
             res.send(result);
         })
