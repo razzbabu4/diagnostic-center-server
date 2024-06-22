@@ -309,6 +309,13 @@ async function run() {
             res.send(result);
         })
 
+        app.get('/reservation/:id', verifyToken, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await reservationCollection.findOne(query);
+            res.send(result);
+        })
+
         app.post('/reservation', verifyToken, async (req, res) => {
             const reservation = req.body;
             const testId = reservation.testId;
@@ -321,6 +328,20 @@ async function run() {
             );
 
             res.send({ reservationResult, updateResult })
+        })
+
+        app.patch('/reservation/:id', verifyToken, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const testRes = req.body;
+            const filter = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $set: {
+                    status: testRes.status,
+                    testReport: testRes.testReport
+                }
+            }
+            const result = await reservationCollection.updateOne(filter, updateDoc);
+            res.send(result);
         })
 
         app.delete('/reservation/:id', verifyToken, async (req, res) => {
