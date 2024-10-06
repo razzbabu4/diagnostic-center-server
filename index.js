@@ -184,7 +184,14 @@ async function run() {
 
         // test/service related api
         app.get('/tests', async (req, res) => {
-            const result = await testCollection.find().sort({ _id: -1 }).toArray();
+            const page = parseInt(req.query.page)
+            const item = parseInt(req.query.item)
+            console.log(page, item)
+            const result = await testCollection
+            .find()
+            .skip(page * item)
+            .limit(item)
+            .sort({ _id: -1 }).toArray();
             res.send(result);
         })
 
@@ -192,6 +199,7 @@ async function run() {
         app.get('/totalTestCount', async (req, res) => {
             const count = await testCollection.estimatedDocumentCount();
             res.send({count})
+            console.log(count)
         })
 
         // search test by testDate
