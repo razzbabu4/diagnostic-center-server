@@ -184,13 +184,19 @@ async function run() {
 
         // test/service related api
         app.get('/tests', async (req, res) => {
-            const result = await testCollection.find().sort({_id: -1}).toArray();
+            const result = await testCollection.find().sort({ _id: -1 }).toArray();
             res.send(result);
+        })
+
+        // test count
+        app.get('/totalTestCount', async (req, res) => {
+            const count = await testCollection.estimatedDocumentCount();
+            res.send({count})
         })
 
         // search test by testDate
         app.get('/searchTestDate/:testDate', async (req, res) => {
-            const {testDate} = req.params;
+            const { testDate } = req.params;
             const filter = { date: { $regex: `^${testDate}$`, $options: 'i' } };
             const result = await testCollection.find(filter).toArray();
             res.send(result)
